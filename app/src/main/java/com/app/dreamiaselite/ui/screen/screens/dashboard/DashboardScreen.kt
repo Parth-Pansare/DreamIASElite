@@ -143,8 +143,6 @@ private fun HeaderHeroCard() {
                         modifier = Modifier.weight(1f)
                     )
                 }
-
-
             }
         }
     }
@@ -201,7 +199,6 @@ private fun StatCard(
         }
     }
 }
-
 
 @Composable
 private fun SubjectChipsRow() {

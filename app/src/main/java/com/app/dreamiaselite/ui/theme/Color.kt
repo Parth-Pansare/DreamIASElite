@@ -13,8 +13,6 @@ val LightSurface = Color(0xFFFFFFFF)
 val TextPrimary = Color(0xFF151515)
 val TextSecondary = Color(0xFF6B6B7A)
 
-val TagBackground = Color(0xFFF2F0FF)
-
 val AccentCyan = Color(0xFF26C6DA)
 val AccentLavender = Color(0xFFB39DDB)
 val AccentPeach = Color(0xFFFFCC80)
