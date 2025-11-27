@@ -3,32 +3,24 @@ package com.app.dreamiaselite
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -41,23 +33,30 @@ import com.app.dreamiaselite.ui.screens.dashboard.DashboardScreen
 import com.app.dreamiaselite.ui.screen.screens.notes.NotesScreen
 import com.app.dreamiaselite.ui.screen.screens.pyq.PyqScreen
 import com.app.dreamiaselite.ui.screen.screens.tests.TestsScreen
+import com.app.dreamiaselite.ui.screen.screens.tests.TestSubjectScreen
+import com.app.dreamiaselite.ui.screen.screens.studyplanner.StudyPlannerScreen
 import com.app.dreamiaselite.ui.theme.DreamIasEliteTheme
 import com.app.dreamiaselite.ui.theme.LightSurface
 import com.app.dreamiaselite.ui.theme.TextPrimary
 import kotlinx.coroutines.launch
+import com.app.dreamiaselite.ui.screen.screens.theme.ThemeAppearanceScreen
+import com.app.dreamiaselite.ui.screen.screens.settings.SettingsScreen
+import com.app.dreamiaselite.ui.screen.screens.help.HelpFeedbackScreen
+import com.app.dreamiaselite.ui.screen.screens.about.AboutPrivacyScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             DreamIasEliteTheme {
-                DreamIasApp()
+                DreamIasApp()   // ✅ FIX: Use real navigation app
             }
         }
     }
 }
 
-// bottom navigation items
+// ----------------- Navigation models -----------------
+
 sealed class BottomNavItem(
     val route: String,
     val label: String
@@ -71,8 +70,13 @@ sealed class BottomNavItem(
 
 data class DrawerItem(
     val label: String,
-    val route: String? = null
+    val route: String? = null,
+    val icon: ImageVector,
+    val subtitle: String? = null,
+    val badge: String? = null
 )
+
+// ----------------- Root App -----------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +95,7 @@ fun DreamIasApp() {
                 currentRoute = currentRoute,
                 onItemClick = { route ->
                     scope.launch { drawerState.close() }
+
                     if (route != null && route != currentRoute) {
                         navController.navigate(route) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -112,16 +117,18 @@ fun DreamIasApp() {
                 )
             },
             bottomBar = {
-                DreamBottomBar(navController = navController)
+                DreamBottomBar(navController)
             }
-        ) { innerPadding ->
+        ) { padding ->
             DreamNavHost(
                 navController = navController,
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(padding)
             )
         }
     }
 }
+
+// ----------------- Top App Bar -----------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,22 +142,19 @@ fun DreamTopBar(
         BottomNavItem.Tests.route -> "Test Series"
         BottomNavItem.Pyq.route -> "Previous Year Questions"
         BottomNavItem.Notes.route -> "My Notes"
+        "theme_appearance" -> "Theme & Appearance"
+        "settings" -> "Settings"
+        "help_feedback" -> "Help & Feedback"
+        "about_privacy" -> "About & Privacy"
+        "study_planner" -> "Study Planner"
         else -> "Dream IAS Elite"
     }
 
     CenterAlignedTopAppBar(
-        title = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium
-            )
-        },
+        title = { Text(text = title, style = MaterialTheme.typography.titleMedium) },
         navigationIcon = {
             IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu"
-                )
+                Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -161,69 +165,138 @@ fun DreamTopBar(
     )
 }
 
+// ----------------- Drawer -----------------
+
 @Composable
-fun DreamDrawer(
-    currentRoute: String?,
-    onItemClick: (String?) -> Unit
-) {
-    val items = listOf(
-        DrawerItem("Dashboard", BottomNavItem.Home.route),
-        DrawerItem("Current Affairs", BottomNavItem.CurrentAffairs.route),
-        DrawerItem("Test Series", BottomNavItem.Tests.route),
-        DrawerItem("PYQ", BottomNavItem.Pyq.route),
-        DrawerItem("Notes", BottomNavItem.Notes.route),
-        DrawerItem("Study Planner (coming soon)"),
-        DrawerItem("Settings (coming soon)")
+fun DreamDrawer(currentRoute: String?, onItemClick: (String?) -> Unit) {
+
+    val accountItems = listOf(
+        DrawerItem("My Profile", icon = Icons.Outlined.AccountCircle, subtitle = "Target year, name", badge = "Soon"),
+        DrawerItem("Progress & Analytics", icon = Icons.Outlined.BarChart, subtitle = "Accuracy, time spent, trends", badge = "Soon")
+    )
+
+    val studyToolsItems = listOf(
+        DrawerItem("Study Planner", route = "study_planner", icon = Icons.Outlined.EventNote, subtitle = "Daily / weekly targets"),
+        DrawerItem("Downloads & Offline", icon = Icons.Outlined.Download, subtitle = "Saved tests, notes, videos", badge = "Soon")
+    )
+
+    val appItems = listOf(
+        DrawerItem("Theme & Appearance", route = "theme_appearance", icon = Icons.Outlined.Palette),
+        DrawerItem("Settings", route = "settings", icon = Icons.Outlined.Settings),
+        DrawerItem("Help & Feedback", route = "help_feedback", icon = Icons.Outlined.HelpOutline),
+        DrawerItem("About & Privacy Policy", route = "about_privacy", icon = Icons.Outlined.Info)
     )
 
     ModalDrawerSheet(
-        drawerContainerColor = LightSurface
+        drawerContainerColor = LightSurface,
+        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
     ) {
-        Column(
+        DrawerHeader()
+
+        DrawerSection("Account", accountItems, currentRoute, onItemClick)
+        DrawerSection("Study Tools", studyToolsItems, currentRoute, onItemClick)
+        DrawerSection("App", appItems, currentRoute, onItemClick)
+    }
+}
+
+@Composable
+fun DrawerSection(
+    title: String,
+    items: List<DrawerItem>,
+    currentRoute: String?,
+    onItemClick: (String?) -> Unit
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.bodyLarge.copy(
+            color = TextPrimary.copy(alpha = 0.6f),
+            fontWeight = FontWeight.SemiBold
+        ),
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+    )
+
+    items.forEach {
+        DrawerItemRow(
+            item = it,
+            isSelected = currentRoute == it.route,
+            onItemClick = onItemClick
+        )
+    }
+}
+
+@Composable
+fun DrawerHeader() {
+    Surface(
+        tonalElevation = 2.dp,
+        shadowElevation = 4.dp,
+        shape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
-        ) {
-            Text(
-                text = "Dream IAS Elite",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-            Text(
-                text = "UPSC Preparation Suite",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.6f)
-                ),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
-
-            items.forEach { item ->
-                val selected = item.route != null && item.route == currentRoute
-                NavigationDrawerItem(
-                    label = { Text(item.label) },
-                    selected = selected,
-                    onClick = { onItemClick(item.route) },
-                    modifier = Modifier.padding(
-                        start = 8.dp,
-                        end = 8.dp,
-                        top = 4.dp,
-                        bottom = 4.dp
-                    ),
-                    colors = NavigationDrawerItemDefaults.colors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                        selectedTextColor = MaterialTheme.colorScheme.primary
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                            Color.White
+                        )
                     )
                 )
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("DE", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column {
+                Text("Dream IAS Elite", fontWeight = FontWeight.Bold)
+                Text("UPSC CSE • Free plan", color = TextPrimary.copy(alpha = 0.7f))
             }
         }
     }
 }
 
+// ----------------- Drawer Item -----------------
+
+@Composable
+fun DrawerItemRow(item: DrawerItem, isSelected: Boolean, onItemClick: (String?) -> Unit) {
+
+    NavigationDrawerItem(
+        label = {
+            Column {
+                Text(item.label, fontWeight = FontWeight.Medium)
+                item.subtitle?.let {
+                    Text(it, color = TextPrimary.copy(alpha = 0.6f))
+                }
+            }
+        },
+        icon = { Icon(item.icon, contentDescription = item.label) },
+        selected = isSelected,
+        onClick = { onItemClick(item.route) },
+        modifier = Modifier.padding(horizontal = 8.dp),
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+            selectedTextColor = MaterialTheme.colorScheme.primary
+        )
+    )
+}
+
+// ----------------- Bottom Bar -----------------
+
 @Composable
 fun DreamBottomBar(navController: NavHostController) {
+
     val items = listOf(
         BottomNavItem.Home,
-        BottomNavItem.CurrentAffairs,
         BottomNavItem.Tests,
         BottomNavItem.Pyq,
         BottomNavItem.Notes
@@ -234,41 +307,47 @@ fun DreamBottomBar(navController: NavHostController) {
         val currentRoute = navBackStackEntry?.destination?.route
 
         items.forEach { item ->
-            val selected = currentRoute == item.route
             NavigationBarItem(
-                selected = selected,
+                selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
                 },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Home, // keep simple for now
-                        contentDescription = item.label
-                    )
-                },
+                icon = { Icon(Icons.Default.Home, contentDescription = item.label) },
                 label = { Text(item.label) }
             )
         }
     }
 }
 
+// ----------------- Navigation Host -----------------
+
 @Composable
 fun DreamNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+
     NavHost(
         navController = navController,
         startDestination = BottomNavItem.Home.route,
         modifier = modifier
     ) {
+
         composable(BottomNavItem.Home.route) { DashboardScreen(navController) }
         composable(BottomNavItem.CurrentAffairs.route) { CurrentAffairsScreen() }
-        composable(BottomNavItem.Tests.route) { TestsScreen() }
+        composable(BottomNavItem.Tests.route) { TestsScreen(navController) }
         composable(BottomNavItem.Pyq.route) { PyqScreen() }
         composable(BottomNavItem.Notes.route) { NotesScreen() }
+
+        composable("theme_appearance") { ThemeAppearanceScreen() }
+        composable("settings") { SettingsScreen() }
+        composable("help_feedback") { HelpFeedbackScreen() }
+        composable("about_privacy") { AboutPrivacyScreen() }
+        composable("study_planner") { StudyPlannerScreen() }
+        composable("test_subject/{name}") { entry ->
+            val name = entry.arguments?.getString("name") ?: "Tests"
+            TestSubjectScreen(name)
+        }
     }
 }
