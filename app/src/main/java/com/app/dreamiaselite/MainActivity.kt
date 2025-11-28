@@ -170,22 +170,29 @@ fun DreamTopBar(
 @Composable
 fun DreamDrawer(currentRoute: String?, onItemClick: (String?) -> Unit) {
 
-    val accountItems = listOf(
-        DrawerItem("My Profile", icon = Icons.Outlined.AccountCircle, subtitle = "Target year, name", badge = "Soon"),
-        DrawerItem("Progress & Analytics", icon = Icons.Outlined.BarChart, subtitle = "Accuracy, time spent, trends", badge = "Soon")
-    )
+    // Remember drawer items to prevent recreation on each recomposition
+    val accountItems = remember {
+        listOf(
+            DrawerItem("My Profile", icon = Icons.Outlined.AccountCircle, subtitle = "Target year, name", badge = "Soon"),
+            DrawerItem("Progress & Analytics", icon = Icons.Outlined.BarChart, subtitle = "Accuracy, time spent, trends", badge = "Soon")
+        )
+    }
 
-    val studyToolsItems = listOf(
-        DrawerItem("Study Planner", route = "study_planner", icon = Icons.Outlined.EventNote, subtitle = "Daily / weekly targets"),
-        DrawerItem("Downloads & Offline", icon = Icons.Outlined.Download, subtitle = "Saved tests, notes, videos", badge = "Soon")
-    )
+    val studyToolsItems = remember {
+        listOf(
+            DrawerItem("Study Planner", route = "study_planner", icon = Icons.Outlined.EventNote, subtitle = "Daily / weekly targets"),
+            DrawerItem("Downloads & Offline", icon = Icons.Outlined.Download, subtitle = "Saved tests, notes, videos", badge = "Soon")
+        )
+    }
 
-    val appItems = listOf(
-        DrawerItem("Theme & Appearance", route = "theme_appearance", icon = Icons.Outlined.Palette),
-        DrawerItem("Settings", route = "settings", icon = Icons.Outlined.Settings),
-        DrawerItem("Help & Feedback", route = "help_feedback", icon = Icons.Outlined.HelpOutline),
-        DrawerItem("About & Privacy Policy", route = "about_privacy", icon = Icons.Outlined.Info)
-    )
+    val appItems = remember {
+        listOf(
+            DrawerItem("Theme & Appearance", route = "theme_appearance", icon = Icons.Outlined.Palette),
+            DrawerItem("Settings", route = "settings", icon = Icons.Outlined.Settings),
+            DrawerItem("Help & Feedback", route = "help_feedback", icon = Icons.Outlined.HelpOutline),
+            DrawerItem("About & Privacy Policy", route = "about_privacy", icon = Icons.Outlined.Info)
+        )
+    }
 
     ModalDrawerSheet(
         drawerContainerColor = LightSurface,
@@ -295,12 +302,15 @@ fun DrawerItemRow(item: DrawerItem, isSelected: Boolean, onItemClick: (String?) 
 @Composable
 fun DreamBottomBar(navController: NavHostController) {
 
-    val items = listOf(
-        BottomNavItem.Home,
-        BottomNavItem.Tests,
-        BottomNavItem.Pyq,
-        BottomNavItem.Notes
-    )
+    // Remember bottom nav items to prevent recreation on each recomposition
+    val items = remember {
+        listOf(
+            BottomNavItem.Home,
+            BottomNavItem.Tests,
+            BottomNavItem.Pyq,
+            BottomNavItem.Notes
+        )
+    }
 
     NavigationBar {
         val navBackStackEntry by navController.currentBackStackEntryAsState()

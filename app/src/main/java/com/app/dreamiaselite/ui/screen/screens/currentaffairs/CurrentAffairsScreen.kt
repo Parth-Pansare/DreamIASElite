@@ -3,6 +3,7 @@ package com.app.dreamiaselite.ui.screens.currentaffairs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.composed
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -138,14 +139,18 @@ fun CurrentAffairsScreen() {
     var selectedChip by remember { mutableStateOf("All") }
     var bookmarkedIds by remember { mutableStateOf(setOf<Int>()) }
 
-    // Filter logic: by chip + search
-    val filteredArticles = allArticles.filter { article ->
-        val matchesChip =
-            selectedChip == "All" || article.tag == selectedChip || article.category == selectedChip
-        val matchesSearch = searchQuery.isBlank() ||
-                article.title.contains(searchQuery, ignoreCase = true) ||
-                article.summary.contains(searchQuery, ignoreCase = true)
-        matchesChip && matchesSearch
+    // Filter logic: by chip + search (optimized with derivedStateOf to avoid unnecessary recalculations)
+    val filteredArticles by remember {
+        androidx.compose.runtime.derivedStateOf {
+            allArticles.filter { article ->
+                val matchesChip =
+                    selectedChip == "All" || article.tag == selectedChip || article.category == selectedChip
+                val matchesSearch = searchQuery.isBlank() ||
+                        article.title.contains(searchQuery, ignoreCase = true) ||
+                        article.summary.contains(searchQuery, ignoreCase = true)
+                matchesChip && matchesSearch
+            }
+        }
     }
 
     Column(
@@ -492,10 +497,11 @@ private fun BadgeChip(
 }
 
 // helper to avoid ripple on the tiny bookmark icon
+// Note: MutableInteractionSource is now properly remembered to avoid recreation on every recomposition
 @Composable
-private fun Modifier.clickableWithoutRipple(onClick: () -> Unit): Modifier {
+private fun Modifier.clickableWithoutRipple(onClick: () -> Unit): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
-    return this.clickable(
+    this.clickable(
         interactionSource = interactionSource,
         indication = null,
         onClick = onClick

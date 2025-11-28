@@ -49,47 +49,52 @@ data class HomeSectionItem(
 @Composable
 fun DashboardScreen(navController: NavHostController) {
 
-    val caItems = listOf(
-        HomeSectionItem(
-            "RBI Monetary Policy Review",
-            "Economy • GS3",
-            "Current Affairs",
-            "Updated today"
-        ),
-        HomeSectionItem(
-            "New Environment Treaty Signed",
-            "Environment • GS3",
-            "Current Affairs",
-            "Key facts & analysis"
-        ),
-        HomeSectionItem(
-            "Supreme Court ruling on FRs",
-            "Polity • GS2",
-            "Current Affairs",
-            "Judgment highlights"
+    // Remember data items to prevent recreation on each recomposition
+    val caItems = remember {
+        listOf(
+            HomeSectionItem(
+                "RBI Monetary Policy Review",
+                "Economy • GS3",
+                "Current Affairs",
+                "Updated today"
+            ),
+            HomeSectionItem(
+                "New Environment Treaty Signed",
+                "Environment • GS3",
+                "Current Affairs",
+                "Key facts & analysis"
+            ),
+            HomeSectionItem(
+                "Supreme Court ruling on FRs",
+                "Polity • GS2",
+                "Current Affairs",
+                "Judgment highlights"
+            )
         )
-    )
+    }
 
-    val testItems = listOf(
-        HomeSectionItem(
-            "Prelims Full Test 1",
-            "100 Q • Timed",
-            "Test Series",
-            "Calibrated to your level"
-        ),
-        HomeSectionItem(
-            "Polity Sectional Test",
-            "30 Q • FRs & DPSP",
-            "Test Series",
-            "Prev best: 72%"
-        ),
-        HomeSectionItem(
-            "Economy Sectional Test",
-            "35 Q • Inflation",
-            "Test Series",
-            "Adaptive difficulty"
+    val testItems = remember {
+        listOf(
+            HomeSectionItem(
+                "Prelims Full Test 1",
+                "100 Q • Timed",
+                "Test Series",
+                "Calibrated to your level"
+            ),
+            HomeSectionItem(
+                "Polity Sectional Test",
+                "30 Q • FRs & DPSP",
+                "Test Series",
+                "Prev best: 72%"
+            ),
+            HomeSectionItem(
+                "Economy Sectional Test",
+                "35 Q • Inflation",
+                "Test Series",
+                "Adaptive difficulty"
+            )
         )
-    )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -312,7 +317,7 @@ fun SubjectChipRow(subjects: List<String>) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(subjects) { subject ->
+        items(subjects, key = { it }) { subject ->
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
@@ -394,14 +399,8 @@ fun HorizontalSectionList(items: List<HomeSectionItem>, highlightColor: Color) {
 
     val listState = rememberLazyListState()
 
-    LaunchedEffect(items) {
-        if (items.isEmpty()) return@LaunchedEffect
-        while (true) {
-            delay(4200)
-            val nextIndex = (listState.firstVisibleItemIndex + 1) % items.size
-            listState.animateScrollToItem(nextIndex)
-        }
-    }
+    // Removed auto-scroll infinite loop that was causing performance issues
+    // Users can now scroll manually without unwanted animations
 
     LazyRow(
         state = listState,

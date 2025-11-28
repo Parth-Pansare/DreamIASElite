@@ -54,14 +54,17 @@ data class SubjectCardData(
 
 @Composable
 fun TestsScreen(navController: NavController) {
-    val subjects = listOf(
-        SubjectCardData("History", "4 books", Icons.Outlined.MenuBook, Color(0xFF3B6EFF), Color(0xFFE7F0FF)),
-        SubjectCardData("Geography", "3 books", Icons.Outlined.Public, Color(0xFF2F9D6B), Color(0xFFE5F5EC)),
-        SubjectCardData("Polity", "3 books", Icons.Outlined.AccountBalance, Color(0xFFB36AF7), Color(0xFFF3E9FF)),
-        SubjectCardData("Economy", "3 books", Icons.Outlined.Savings, Color(0xFFF5A524), Color(0xFFFFF4E3)),
-        SubjectCardData("Environment & Ecology", "3 books", Icons.Outlined.Eco, Color(0xFF2CB174), Color(0xFFE6F8EE)),
-        SubjectCardData("Science & Technology", "3 books", Icons.Outlined.Science, Color(0xFFDF6CC6), Color(0xFFFCEBFF))
-    )
+    // Remember subjects list to prevent recreation on each recomposition
+    val subjects = remember {
+        listOf(
+            SubjectCardData("History", "4 books", Icons.Outlined.MenuBook, Color(0xFF3B6EFF), Color(0xFFE7F0FF)),
+            SubjectCardData("Geography", "3 books", Icons.Outlined.Public, Color(0xFF2F9D6B), Color(0xFFE5F5EC)),
+            SubjectCardData("Polity", "3 books", Icons.Outlined.AccountBalance, Color(0xFFB36AF7), Color(0xFFF3E9FF)),
+            SubjectCardData("Economy", "3 books", Icons.Outlined.Savings, Color(0xFFF5A524), Color(0xFFFFF4E3)),
+            SubjectCardData("Environment & Ecology", "3 books", Icons.Outlined.Eco, Color(0xFF2CB174), Color(0xFFE6F8EE)),
+            SubjectCardData("Science & Technology", "3 books", Icons.Outlined.Science, Color(0xFFDF6CC6), Color(0xFFFCEBFF))
+        )
+    }
 
     Column(
         modifier = Modifier
