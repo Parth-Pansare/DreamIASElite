@@ -16,3 +16,10 @@ val TextSecondary = Color(0xFF6B6B7A)
 val AccentCyan = Color(0xFF26C6DA)
 val AccentLavender = Color(0xFFB39DDB)
 val AccentPeach = Color(0xFFFFCC80)
+
+// Dark palette
+val DarkBackground = Color(0xFF0F1116)
+val DarkSurface = Color(0xFF181C24)
+val DarkCard = Color(0xFF1F2430)
+val DarkTextPrimary = Color(0xFFF5F7FB)
+val DarkTextSecondary = Color(0xFFB6C1D2)

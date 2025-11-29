@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -102,8 +103,8 @@ fun DashboardScreen(navController: NavHostController) {
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        Color(0xFFF6F7FB),
-                        Color.White
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surface
                     )
                 )
             ),
@@ -115,7 +116,11 @@ fun DashboardScreen(navController: NavHostController) {
 
         item {
             SubjectChipRow(
-                subjects = listOf("History", "Geography", "Polity", "Economy", "Science")
+                subjects = listOf("History", "Geography", "Polity", "Economy", "Science"),
+                onSubjectClick = { subject ->
+                    val encoded = java.net.URLEncoder.encode(subject, "UTF-8")
+                    navController.navigate("subject_dashboard/$encoded")
+                }
             )
         }
 
@@ -175,7 +180,7 @@ fun DashboardHeroCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
@@ -184,9 +189,9 @@ fun DashboardHeroCard() {
                 .background(
                     Brush.linearGradient(
                         listOf(
-                            AccentCyan.copy(alpha = 0.14f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
                             AccentPeach.copy(alpha = 0.18f),
-                            Color.White
+                            MaterialTheme.colorScheme.surface
                         )
                     )
                 )
@@ -202,14 +207,14 @@ fun DashboardHeroCard() {
                 DashboardBadge(text = "UPSC 2025", color = Gold)
                 Text(
                     text = "112 days left",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 )
             }
 
             Text(
                 text = "Welcome back, Aspirant 👋",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
 
@@ -224,16 +229,9 @@ fun DashboardHeroCard() {
             Text(
                 text = "Let's complete today’s targets and get closer to your rank.",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                StatChip(label = "Streak", value = "5 days")
-                StatChip(label = "Focus", value = "Polity & CA")
-            }
 
             DailyProgressCard()
         }
@@ -244,7 +242,7 @@ fun DashboardHeroCard() {
 fun DailyProgressCard() {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -262,7 +260,7 @@ fun DailyProgressCard() {
                     text = "Daily MCQs Progress",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Medium,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 )
                 Icon(
@@ -283,7 +281,7 @@ fun DailyProgressCard() {
             Text(
                 text = "Keep pace to hit today’s target.",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
 
@@ -294,7 +292,7 @@ fun DailyProgressCard() {
                     .height(8.dp)
                     .clip(RoundedCornerShape(50)),
                 color = AccentCyan,
-                trackColor = Color(0xFFEAEAEA)
+                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
             )
 
             Row(
@@ -313,7 +311,10 @@ fun DailyProgressCard() {
 //-------------------------------------------------------
 
 @Composable
-fun SubjectChipRow(subjects: List<String>) {
+fun SubjectChipRow(
+    subjects: List<String>,
+    onSubjectClick: (String) -> Unit
+) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -321,14 +322,15 @@ fun SubjectChipRow(subjects: List<String>) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFECECEC), RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                    .clickable { onSubjectClick(subject) }
                     .padding(horizontal = 14.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = subject,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }
@@ -361,13 +363,13 @@ fun SectionHeader(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             )
             Text(
                 text = caption,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
         }
@@ -426,7 +428,7 @@ fun HomeCard(item: HomeSectionItem, highlightColor: Color) {
             .height(150.dp)
             .clickable { },
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
 
@@ -437,7 +439,7 @@ fun HomeCard(item: HomeSectionItem, highlightColor: Color) {
                     Brush.linearGradient(
                         listOf(
                             highlightColor.copy(alpha = 0.16f),
-                            Color.White
+                            MaterialTheme.colorScheme.surface
                         )
                     )
                 )
@@ -458,7 +460,7 @@ fun HomeCard(item: HomeSectionItem, highlightColor: Color) {
                     Text(
                         text = item.meta,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     )
                 }
@@ -467,7 +469,7 @@ fun HomeCard(item: HomeSectionItem, highlightColor: Color) {
                     text = item.title,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     ),
                     maxLines = 2
                 )
@@ -475,7 +477,7 @@ fun HomeCard(item: HomeSectionItem, highlightColor: Color) {
                 Text(
                     text = item.subtitle,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
 
@@ -541,20 +543,20 @@ private fun StatChip(label: String, value: String) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.86f))
-            .border(1.dp, Color(0xFFE5E5E5), RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.SemiBold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         )
     }

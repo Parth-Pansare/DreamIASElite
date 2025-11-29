@@ -39,9 +39,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.app.dreamiaselite.ui.theme.LightSurface
-import com.app.dreamiaselite.ui.theme.TextPrimary
-
 // ---------- data model ----------
 
 data class PlannerTask(
@@ -106,7 +103,7 @@ fun StudyPlannerScreen() {
         Text(
             text = "Plan your day and track your weekly targets.",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextPrimary.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         )
 
@@ -138,7 +135,7 @@ fun StudyPlannerScreen() {
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = LightSurface
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
             Text(text = "+ Add Task")
@@ -221,7 +218,7 @@ private fun PlannerSummaryCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = LightSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -230,7 +227,7 @@ private fun PlannerSummaryCard(
                     Brush.verticalGradient(
                         listOf(
                             MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                            Color.White
+                            MaterialTheme.colorScheme.surface
                         )
                     )
                 )
@@ -246,7 +243,7 @@ private fun PlannerSummaryCard(
             Text(
                 text = "Stay consistent. Small wins add up.",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
 
@@ -295,7 +292,7 @@ private fun SummaryStat(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextPrimary.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         )
     }
@@ -311,7 +308,7 @@ private fun TodayPlanCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = LightSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -327,7 +324,7 @@ private fun TodayPlanCard(
             Text(
                 text = "Mark tasks as done as you progress.",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
 
@@ -372,17 +369,17 @@ private fun PlannerTaskRow(
                         } else {
                             TextDecoration.None
                         },
-                        color = if (task.isDone) {
-                            TextPrimary.copy(alpha = 0.5f)
+                       color = if (task.isDone) {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         } else {
-                            TextPrimary
+                            MaterialTheme.colorScheme.onSurface
                         }
                     )
                 )
                 Text(
                     text = task.subtitle,
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextPrimary.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
             }
@@ -397,7 +394,7 @@ private fun WeeklyTargetsCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = LightSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -413,7 +410,7 @@ private fun WeeklyTargetsCard() {
             Text(
                 text = "Keep at least 70% of your weekly plan consistent.",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
 
@@ -453,7 +450,7 @@ private fun DayCompletionCircle(
                     Brush.verticalGradient(
                         listOf(
                             MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
-                            Color.White
+                            MaterialTheme.colorScheme.surface
                         )
                     )
                 ),
@@ -470,7 +467,7 @@ private fun DayCompletionCircle(
         Text(
             text = "${(progress * 100).toInt()}%",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextPrimary.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         )
     }

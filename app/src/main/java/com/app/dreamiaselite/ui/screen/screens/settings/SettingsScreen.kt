@@ -23,11 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.app.dreamiaselite.ui.theme.LightBackground
-import com.app.dreamiaselite.ui.theme.LightSurface
-import com.app.dreamiaselite.ui.theme.TextPrimary
-import com.app.dreamiaselite.ui.theme.TextSecondary
-
 @Composable
 fun SettingsScreen() {
     var notifDailyReminders by remember { mutableStateOf(true) }
@@ -38,7 +33,7 @@ fun SettingsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -51,12 +46,12 @@ fun SettingsScreen() {
         Text(
             text = "Control notifications, downloads and reminders.",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         )
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -99,7 +94,7 @@ fun SettingsScreen() {
         }
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -126,7 +121,7 @@ fun SettingsScreen() {
                 Text(
                     text = "Storage usage: 0.0 MB (for now)",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
             }
@@ -159,7 +154,7 @@ private fun SettingsToggleRow(
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
         }

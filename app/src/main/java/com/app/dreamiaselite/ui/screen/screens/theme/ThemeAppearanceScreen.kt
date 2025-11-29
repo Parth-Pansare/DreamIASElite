@@ -21,9 +21,10 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,20 +37,18 @@ import com.app.dreamiaselite.ui.theme.AccentCyan
 import com.app.dreamiaselite.ui.theme.AccentLavender
 import com.app.dreamiaselite.ui.theme.AccentPeach
 import com.app.dreamiaselite.ui.theme.Gold
-import com.app.dreamiaselite.ui.theme.LightBackground
-import com.app.dreamiaselite.ui.theme.LightSurface
-import com.app.dreamiaselite.ui.theme.TextPrimary
-import com.app.dreamiaselite.ui.theme.TextSecondary
+import com.app.dreamiaselite.ui.theme.LocalThemeController
 
 @Composable
 fun ThemeAppearanceScreen() {
-    var selectedMode by remember { mutableStateOf("Light") }
+    val themeController = LocalThemeController.current
+    var selectedMode by rememberSaveable { mutableStateOf(if (themeController.isDarkMode) "Dark" else "Light") }
     var selectedAccent by remember { mutableStateOf("Gold") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -63,13 +62,12 @@ fun ThemeAppearanceScreen() {
         Text(
             text = "Personalise how Dream IAS Elite looks and feels.",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         )
 
-        // Mode selection
         Card(
-            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -83,34 +81,32 @@ fun ThemeAppearanceScreen() {
                         fontWeight = FontWeight.SemiBold
                     )
                 )
-                Text(
-                    text = "Dark mode will be available in a future update.",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary
-                    )
-                )
-
                 Spacer(Modifier.height(8.dp))
 
                 ThemeModeOption(
                     title = "Light",
                     description = "Clean white background with pastel highlights.",
                     selected = selectedMode == "Light",
-                    onClick = { selectedMode = "Light" }
+                    onClick = {
+                        selectedMode = "Light"
+                        themeController.setDarkMode(false)
+                    }
                 )
 
                 ThemeModeOption(
-                    title = "Dark (coming soon)",
+                    title = "Dark",
                     description = "Battery-friendly dark theme for night study.",
                     selected = selectedMode == "Dark",
-                    onClick = { selectedMode = "Dark" }
+                    onClick = {
+                        selectedMode = "Dark"
+                        themeController.setDarkMode(true)
+                    }
                 )
             }
         }
 
-        // Accent colors
         Card(
-            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -127,7 +123,7 @@ fun ThemeAppearanceScreen() {
                 Text(
                     text = "Choose the highlight colour used for chips, pills and small elements.",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
 
@@ -159,7 +155,6 @@ fun ThemeAppearanceScreen() {
             }
         }
 
-        // Preview card
         Text(
             text = "Preview",
             style = MaterialTheme.typography.titleMedium.copy(
@@ -200,7 +195,7 @@ private fun ThemeModeOption(
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
         }
@@ -218,7 +213,7 @@ private fun AccentPill(
         shape = RoundedCornerShape(50),
         tonalElevation = if (selected) 2.dp else 0.dp,
         shadowElevation = 0.dp,
-        color = if (selected) color.copy(alpha = 0.12f) else LightSurface,
+        color = if (selected) color.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .clickable { onClick() }
@@ -237,7 +232,7 @@ private fun AccentPill(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
@@ -255,7 +250,7 @@ private fun ThemePreviewCard(selectedAccent: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = LightSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -264,7 +259,7 @@ private fun ThemePreviewCard(selectedAccent: String) {
                     Brush.verticalGradient(
                         listOf(
                             accentColor.copy(alpha = 0.13f),
-                            Color.White
+                            MaterialTheme.colorScheme.surface
                         )
                     )
                 )
@@ -280,7 +275,7 @@ private fun ThemePreviewCard(selectedAccent: String) {
             Text(
                 text = "This is how cards and highlights will look with your chosen accent colour.",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
 
@@ -295,7 +290,7 @@ private fun ThemePreviewCard(selectedAccent: String) {
                         .weight(1f)
                         .height(60.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(LightSurface)
+                        .background(MaterialTheme.colorScheme.surface)
                 )
                 Box(
                     modifier = Modifier

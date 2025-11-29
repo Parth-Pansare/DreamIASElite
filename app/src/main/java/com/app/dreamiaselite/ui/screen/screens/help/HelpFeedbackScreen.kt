@@ -24,10 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.app.dreamiaselite.ui.theme.LightBackground
-import com.app.dreamiaselite.ui.theme.LightSurface
-import com.app.dreamiaselite.ui.theme.TextPrimary
-import com.app.dreamiaselite.ui.theme.TextSecondary
 import com.app.dreamiaselite.ui.theme.Gold
 
 @Composable
@@ -38,7 +34,7 @@ fun HelpFeedbackScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -51,12 +47,12 @@ fun HelpFeedbackScreen() {
         Text(
             text = "Facing an issue or have a feature idea? Tell us and we’ll try to make it happen.",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         )
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -96,7 +92,7 @@ fun HelpFeedbackScreen() {
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Gold,
-                        contentColor = LightSurface
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text("Submit")
@@ -105,7 +101,7 @@ fun HelpFeedbackScreen() {
         }
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -124,7 +120,7 @@ fun HelpFeedbackScreen() {
                             "• For login issues, make sure you’re using the latest app version.\n" +
                             "• You can clear app data & re-login if content looks outdated.",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
             }
@@ -133,7 +129,7 @@ fun HelpFeedbackScreen() {
         Text(
             text = "Response time: typically within 24–48 hours (future feature).",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         )
     }

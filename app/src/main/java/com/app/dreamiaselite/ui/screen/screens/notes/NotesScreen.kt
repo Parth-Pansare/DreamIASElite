@@ -25,7 +25,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.CloudUpload
+import androidx.compose.material.icons.outlined.Eco
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Savings
+import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -45,22 +52,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import com.app.dreamiaselite.ui.theme.LightSurface
-import com.app.dreamiaselite.ui.theme.TextPrimary
-
 // ---------- data models ----------
 
 data class NoteFolder(
     val name: String,
     val count: Int,
-    val color: Color
+    val color: Color,
+    val icon: ImageVector,
+    val iconTint: Color
 )
 
 data class NoteItem(
@@ -82,10 +88,12 @@ fun NotesScreen() {
     // mock folders
     val folders = remember {
         listOf(
-            NoteFolder("History", 24, Color(0xFFEBF2FF)),
-            NoteFolder("Polity", 18, Color(0xFFF3E7FF)),
-            NoteFolder("Geography", 31, Color(0xFFE7F7EE)),
-            NoteFolder("Economy", 15, Color(0xFFFFF0E2))
+            NoteFolder("History", 24, Color(0xFFEBF2FF), Icons.Outlined.MenuBook, Color(0xFF3B6EFF)),
+            NoteFolder("Polity", 18, Color(0xFFF3E7FF), Icons.Outlined.AccountBalance, Color(0xFF9C27B0)),
+            NoteFolder("Geography", 31, Color(0xFFE7F7EE), Icons.Outlined.Public, Color(0xFF2E7D32)),
+            NoteFolder("Economy", 15, Color(0xFFFFF0E2), Icons.Outlined.Savings, Color(0xFFEF6C00)),
+            NoteFolder("Science & Technology", 14, Color(0xFFF4EDFF), Icons.Outlined.Science, Color(0xFF512DA8)),
+            NoteFolder("Environment & Ecology", 12, Color(0xFFEAF7F0), Icons.Outlined.Eco, Color(0xFF1B8A4B))
         )
     }
 
@@ -206,7 +214,7 @@ private fun NotesHeader(
             text = "My Notes",
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -218,7 +226,7 @@ private fun NotesHeader(
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = LightSurface
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 horizontal = 12.dp,
@@ -248,7 +256,7 @@ private fun NotesSearchBar(
             Text(
                 text = "Search notes...",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
             )
         },
@@ -335,7 +343,7 @@ private fun FoldersSection(
         text = "Folders",
         style = MaterialTheme.typography.titleMedium.copy(
             fontWeight = FontWeight.SemiBold,
-            color = TextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         ),
         modifier = Modifier.padding(bottom = 8.dp)
     )
@@ -359,7 +367,7 @@ private fun FolderCard(folder: NoteFolder) {
             .wrapContentHeight()
             .clickable { /* TODO: open folder */ },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = LightSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -368,16 +376,15 @@ private fun FolderCard(folder: NoteFolder) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(folder.color),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color.White)
+                Icon(
+                    imageVector = folder.icon,
+                    contentDescription = "${folder.name} icon",
+                    tint = folder.iconTint
                 )
             }
 
@@ -385,13 +392,13 @@ private fun FolderCard(folder: NoteFolder) {
                 text = folder.name,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Medium,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             )
             Text(
                 text = "${folder.count} notes",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
         }
@@ -413,7 +420,7 @@ private fun RecentNotesHeader(
             text = "Recent Notes",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.SemiBold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -438,7 +445,7 @@ private fun NoteCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = LightSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -457,7 +464,7 @@ private fun NoteCard(
                     Text(
                         text = note.date,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            color = TextPrimary.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     )
                 }
@@ -467,14 +474,14 @@ private fun NoteCard(
                 text = note.title,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             )
 
             Text(
                 text = note.preview,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 ),
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
@@ -507,13 +514,13 @@ private fun NoteCard(
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Edit",
-                            tint = TextPrimary.copy(alpha = 0.8f)
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
                             text = "Edit",
                             style = MaterialTheme.typography.bodyLarge.copy(
-                                color = TextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         )
                     }
@@ -525,13 +532,13 @@ private fun NoteCard(
                         Icon(
                             imageVector = Icons.Outlined.Share,
                             contentDescription = "Share",
-                            tint = TextPrimary.copy(alpha = 0.8f)
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
                             text = "Share",
                             style = MaterialTheme.typography.bodyLarge.copy(
-                                color = TextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         )
                     }
@@ -557,7 +564,7 @@ private fun SubjectTagChip(text: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(Color(0xFFEAF0FF))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
@@ -575,13 +582,13 @@ private fun TagChip(text: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(Color(0xFFF3F4F8))
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextPrimary.copy(alpha = 0.8f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
             )
         )
     }
@@ -603,7 +610,7 @@ private fun ImportShareRow(
                 .weight(1f)
                 .clickable { onImportClick() },
             shape = RoundedCornerShape(16.dp),
-            color = LightSurface,
+            color = MaterialTheme.colorScheme.surface,
             tonalElevation = 1.dp,
             shadowElevation = 0.dp
         ) {
@@ -612,16 +619,24 @@ private fun ImportShareRow(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Share, // placeholder icon
-                    contentDescription = "Import",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CloudUpload,
+                        contentDescription = "Import",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Text(
                     text = "Import Notes",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Medium,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }
@@ -632,7 +647,7 @@ private fun ImportShareRow(
                 .weight(1f)
                 .clickable { onShareAllClick() },
             shape = RoundedCornerShape(16.dp),
-            color = LightSurface,
+            color = MaterialTheme.colorScheme.surface,
             tonalElevation = 1.dp,
             shadowElevation = 0.dp
         ) {
@@ -641,16 +656,24 @@ private fun ImportShareRow(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Share,
-                    contentDescription = "Share All",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = "Share All",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Text(
                     text = "Share All",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Medium,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }

@@ -48,8 +48,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.app.dreamiaselite.ui.theme.LightSurface
-import com.app.dreamiaselite.ui.theme.TextPrimary
 
 // ---------------- DATA MODELS ----------------
 
@@ -212,7 +210,7 @@ private fun ScreenHeader() {
         text = "Current Affairs",
         style = MaterialTheme.typography.headlineSmall.copy(
             fontWeight = FontWeight.Bold,
-            color = TextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         ),
         modifier = Modifier.padding(top = 4.dp)
     )
@@ -233,7 +231,7 @@ private fun SearchBar(
             Text(
                 text = "Search current affairs...",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
             )
         },
@@ -273,10 +271,10 @@ private fun CurrentAffairsChipsRow(
                 },
                 shape = RoundedCornerShape(50),
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = LightSurface,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                    labelColor = TextPrimary,
-                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                    labelColor = MaterialTheme.colorScheme.onSurface,
+                    selectedLabelColor = MaterialTheme.colorScheme.primary
                 )
             )
         }
@@ -289,7 +287,7 @@ private fun WeeklyHighlightCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF305CFF) // bright blue like your Figma
+            containerColor = Color(0xFF305CFF) // keep a bold highlight card
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -349,7 +347,7 @@ private fun CurrentAffairArticleCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = LightSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -396,7 +394,7 @@ private fun CurrentAffairArticleCard(
                         tint = if (isBookmarked)
                             MaterialTheme.colorScheme.primary
                         else
-                            TextPrimary.copy(alpha = 0.7f),
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         modifier = Modifier
                             .size(20.dp)
                             .padding(2.dp)
@@ -410,7 +408,7 @@ private fun CurrentAffairArticleCard(
                 text = article.title,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             )
 
@@ -418,7 +416,7 @@ private fun CurrentAffairArticleCard(
             Text(
                 text = article.summary,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 ),
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
@@ -432,19 +430,19 @@ private fun CurrentAffairArticleCard(
                 Text(
                     text = article.date,
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextPrimary.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 )
                 Text(
                     text = "•",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextPrimary.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 )
                 Text(
                     text = article.readTime,
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextPrimary.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 )
             }
@@ -458,8 +456,8 @@ private fun CurrentAffairArticleCard(
                     .height(40.dp),
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = TextPrimary,
-                    contentColor = LightSurface
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Text(

@@ -17,17 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.app.dreamiaselite.ui.theme.LightBackground
-import com.app.dreamiaselite.ui.theme.LightSurface
-import com.app.dreamiaselite.ui.theme.TextPrimary
-import com.app.dreamiaselite.ui.theme.TextSecondary
 
 @Composable
 fun AboutPrivacyScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -41,12 +37,12 @@ fun AboutPrivacyScreen() {
         Text(
             text = "Learn about Dream IAS Elite and how we handle your data.",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         )
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -64,7 +60,7 @@ fun AboutPrivacyScreen() {
                     text = "Dream IAS Elite is designed as a focused UPSC preparation companion. " +
                             "The goal is to combine current affairs, tests, PYQs and notes in a clean, distraction-free interface.",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
 
@@ -79,14 +75,14 @@ fun AboutPrivacyScreen() {
                 Text(
                     text = "v0.1.0 (prototype)",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
             }
         }
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -106,7 +102,7 @@ fun AboutPrivacyScreen() {
                             "• We do not plan to sell your personal data to third parties.\n" +
                             "• Analytics (if enabled) will be used only to improve the learning experience.",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
 
@@ -121,7 +117,7 @@ fun AboutPrivacyScreen() {
                 Text(
                     text = "A detailed Privacy Policy and Terms of Use will be published before public release.",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 )
             }

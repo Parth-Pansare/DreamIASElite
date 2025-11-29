@@ -1,5 +1,6 @@
 package com.app.dreamiaselite
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,14 +32,18 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.app.dreamiaselite.ui.screens.currentaffairs.CurrentAffairsScreen
 import com.app.dreamiaselite.ui.screens.dashboard.DashboardScreen
+import com.app.dreamiaselite.ui.screens.dashboard.SubjectDashboardScreen
 import com.app.dreamiaselite.ui.screen.screens.notes.NotesScreen
 import com.app.dreamiaselite.ui.screen.screens.pyq.PyqScreen
+import com.app.dreamiaselite.ui.screen.screens.pyq.PyqPaperDetailScreen
 import com.app.dreamiaselite.ui.screen.screens.tests.TestsScreen
 import com.app.dreamiaselite.ui.screen.screens.tests.TestSubjectScreen
+import com.app.dreamiaselite.ui.screen.screens.tests.TestSessionScreen
+import com.app.dreamiaselite.ui.screen.screens.tests.TestResultScreen
 import com.app.dreamiaselite.ui.screen.screens.studyplanner.StudyPlannerScreen
 import com.app.dreamiaselite.ui.theme.DreamIasEliteTheme
-import com.app.dreamiaselite.ui.theme.LightSurface
-import com.app.dreamiaselite.ui.theme.TextPrimary
+import com.app.dreamiaselite.ui.theme.LocalThemeController
+import com.app.dreamiaselite.ui.theme.ThemeController
 import kotlinx.coroutines.launch
 import com.app.dreamiaselite.ui.screen.screens.theme.ThemeAppearanceScreen
 import com.app.dreamiaselite.ui.screen.screens.settings.SettingsScreen
@@ -48,8 +54,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            DreamIasEliteTheme {
-                DreamIasApp()   // ✅ FIX: Use real navigation app
+            var isDarkMode by rememberSaveable { mutableStateOf(false) }
+
+            CompositionLocalProvider(
+                LocalThemeController provides ThemeController(
+                    isDarkMode = isDarkMode,
+                    setDarkMode = { isDarkMode = it }
+                )
+            ) {
+                DreamIasEliteTheme(isDarkMode = isDarkMode) {
+                    DreamIasApp()   // ✅ FIX: Use real navigation app
+                }
             }
         }
     }
@@ -59,13 +74,14 @@ class MainActivity : ComponentActivity() {
 
 sealed class BottomNavItem(
     val route: String,
-    val label: String
+    val label: String,
+    val icon: ImageVector
 ) {
-    object Home : BottomNavItem("dashboard", "Home")
-    object CurrentAffairs : BottomNavItem("current_affairs", "CA")
-    object Tests : BottomNavItem("tests", "Tests")
-    object Pyq : BottomNavItem("pyq", "PYQ")
-    object Notes : BottomNavItem("notes", "Notes")
+    object Home : BottomNavItem("dashboard", "Home", Icons.Filled.Home)
+    object CurrentAffairs : BottomNavItem("current_affairs", "CA", Icons.Outlined.Article)
+    object Tests : BottomNavItem("tests", "Tests", Icons.Outlined.AssignmentTurnedIn)
+    object Pyq : BottomNavItem("pyq", "PYQ", Icons.Outlined.HistoryEdu)
+    object Notes : BottomNavItem("notes", "Notes", Icons.Outlined.StickyNote2)
 }
 
 data class DrawerItem(
@@ -158,9 +174,9 @@ fun DreamTopBar(
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = LightSurface,
-            titleContentColor = TextPrimary,
-            navigationIconContentColor = TextPrimary
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurface
         )
     )
 }
@@ -195,8 +211,9 @@ fun DreamDrawer(currentRoute: String?, onItemClick: (String?) -> Unit) {
     }
 
     ModalDrawerSheet(
-        drawerContainerColor = LightSurface,
-        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
+        drawerContainerColor = MaterialTheme.colorScheme.surface,
+        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+        modifier = Modifier.fillMaxWidth(0.7f)
     ) {
         DrawerHeader()
 
@@ -216,7 +233,7 @@ fun DrawerSection(
     Text(
         text = title,
         style = MaterialTheme.typography.bodyLarge.copy(
-            color = TextPrimary.copy(alpha = 0.6f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             fontWeight = FontWeight.SemiBold
         ),
         modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
@@ -245,7 +262,7 @@ fun DrawerHeader() {
                     Brush.verticalGradient(
                         listOf(
                             MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                            Color.White
+                            MaterialTheme.colorScheme.surface
                         )
                     )
                 )
@@ -266,7 +283,7 @@ fun DrawerHeader() {
 
             Column {
                 Text("Dream IAS Elite", fontWeight = FontWeight.Bold)
-                Text("UPSC CSE • Free plan", color = TextPrimary.copy(alpha = 0.7f))
+                Text("UPSC CSE • Free plan", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         }
     }
@@ -282,7 +299,7 @@ fun DrawerItemRow(item: DrawerItem, isSelected: Boolean, onItemClick: (String?) 
             Column {
                 Text(item.label, fontWeight = FontWeight.Medium)
                 item.subtitle?.let {
-                    Text(it, color = TextPrimary.copy(alpha = 0.6f))
+                    Text(it, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }
             }
         },
@@ -326,7 +343,7 @@ fun DreamBottomBar(navController: NavHostController) {
                         restoreState = true
                     }
                 },
-                icon = { Icon(Icons.Default.Home, contentDescription = item.label) },
+                icon = { Icon(item.icon, contentDescription = item.label) },
                 label = { Text(item.label) }
             )
         }
@@ -347,8 +364,12 @@ fun DreamNavHost(navController: NavHostController, modifier: Modifier = Modifier
         composable(BottomNavItem.Home.route) { DashboardScreen(navController) }
         composable(BottomNavItem.CurrentAffairs.route) { CurrentAffairsScreen() }
         composable(BottomNavItem.Tests.route) { TestsScreen(navController) }
-        composable(BottomNavItem.Pyq.route) { PyqScreen() }
+        composable(BottomNavItem.Pyq.route) { PyqScreen(navController) }
         composable(BottomNavItem.Notes.route) { NotesScreen() }
+        composable("subject_dashboard/{subject}") { entry ->
+            val subject = entry.arguments?.getString("subject") ?: "Subject"
+            SubjectDashboardScreen(Uri.decode(subject), navController)
+        }
 
         composable("theme_appearance") { ThemeAppearanceScreen() }
         composable("settings") { SettingsScreen() }
@@ -357,7 +378,18 @@ fun DreamNavHost(navController: NavHostController, modifier: Modifier = Modifier
         composable("study_planner") { StudyPlannerScreen() }
         composable("test_subject/{name}") { entry ->
             val name = entry.arguments?.getString("name") ?: "Tests"
-            TestSubjectScreen(name)
+            TestSubjectScreen(Uri.decode(name), navController)
+        }
+        composable("test_session/{subject}") { entry ->
+            val subject = entry.arguments?.getString("subject") ?: "Test"
+            TestSessionScreen(Uri.decode(subject), navController)
+        }
+        composable("test_result") {
+            TestResultScreen(navController)
+        }
+        composable("pyq_paper/{paperId}") { entry ->
+            val paperId = entry.arguments?.getString("paperId") ?: return@composable
+            PyqPaperDetailScreen(navController, paperId)
         }
     }
 }
