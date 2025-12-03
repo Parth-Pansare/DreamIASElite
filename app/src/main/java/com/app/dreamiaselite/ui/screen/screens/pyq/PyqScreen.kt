@@ -158,23 +158,6 @@ fun PyqScreen(navController: NavController) {
             PyqPaperCard(paper)
         }
 
-        val filteredQuestions = pyqQuestions.filter {
-            if (selectedTab.value == "Year-wise") it.year == selectedYear.value else it.paper == selectedSubject.value
-        }
-
-        if (filteredQuestions.isNotEmpty()) {
-            item {
-                Text(
-                    text = "PYQ Questions",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            items(filteredQuestions, key = { it.id }) { question ->
-                PyqQuestionCard(question)
-            }
-        }
-
         item { StatsRow() }
 
         item { StudyTipCard() }
@@ -534,65 +517,6 @@ private fun PyqPaperCard(paper: PyqPaper) {
         }
     }
 }
-
-@Composable
-private fun PyqQuestionCard(question: PyqQuestion) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(1.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "${question.paper} • ${question.year}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    )
-                    Text(
-                        text = question.subject,
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                    )
-                }
-                StatusBadge(label = "PYQ", color = Color(0xFF2E6BFF))
-            }
-
-            Text(
-                text = question.question,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            )
-
-            Divider(color = Color(0xFFE9EBF1))
-
-            Text(
-                text = "Answer: ${question.answer}",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF17612B)
-                )
-            )
-            Text(
-                text = "Explanation: ${question.explanation}",
-                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-            )
-        }
-    }
-}
-
 
 @Composable
 private fun StatusBadge(label: String, color: Color) {

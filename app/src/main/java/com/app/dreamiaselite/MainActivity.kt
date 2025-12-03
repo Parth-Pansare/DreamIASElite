@@ -390,13 +390,25 @@ fun DreamBottomBar(navController: NavHostController) {
         )
     }
 
+    fun rootForRoute(route: String?): String? {
+        if (route == null) return null
+        return when {
+            route == BottomNavItem.Home.route || route.startsWith("subject_dashboard") -> BottomNavItem.Home.route
+            route.startsWith("test_") || route == BottomNavItem.Tests.route -> BottomNavItem.Tests.route
+            route.startsWith("pyq") || route == BottomNavItem.Pyq.route -> BottomNavItem.Pyq.route
+            route.startsWith("notes") || route == BottomNavItem.Notes.route -> BottomNavItem.Notes.route
+            else -> route
+        }
+    }
+
     NavigationBar {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
+        val currentRoot = rootForRoute(currentRoute)
 
         items.forEach { item ->
             NavigationBarItem(
-                selected = currentRoute == item.route,
+                selected = currentRoot == item.route,
                 onClick = {
                     navController.navigate(item.route) {
                         popUpTo(item.route) {
