@@ -1,5 +1,9 @@
 package com.app.dreamiaselite.ui.screen.screens.help
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,14 +26,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.app.dreamiaselite.ui.theme.Gold
 
 @Composable
-fun HelpFeedbackScreen() {
+fun HelpFeedbackScreen(
+    currentUserEmail: String?
+) {
     var message by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -68,9 +75,10 @@ fun HelpFeedbackScreen() {
                 )
 
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email (optional)") },
+                    value = currentUserEmail.orEmpty(),
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Your email") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -87,7 +95,31 @@ fun HelpFeedbackScreen() {
                 Spacer(Modifier.height(8.dp))
 
                 Button(
-                    onClick = { /* TODO: send to backend or email */ },
+                    onClick = {
+                        if (message.isBlank()) {
+                            Toast.makeText(context, "Please write your feedback first", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("mailto:")
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf("parthpansare310306@gmail.com"))
+                                putExtra(Intent.EXTRA_SUBJECT, "Dream IAS Elite - Feedback")
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    """
+                                        Feedback:
+                                        $message
+
+                                        From: ${currentUserEmail ?: "Unknown user"}
+                                    """.trimIndent()
+                                )
+                            }
+                            try {
+                                context.startActivity(Intent.createChooser(intent, "Send feedback"))
+                            } catch (_: ActivityNotFoundException) {
+                                Toast.makeText(context, "No email app found to send feedback", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
                     modifier = Modifier.align(androidx.compose.ui.Alignment.End),
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(

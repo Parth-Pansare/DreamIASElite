@@ -1,9 +1,11 @@
 package com.app.dreamiaselite
 
 import android.net.Uri
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -20,7 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
@@ -61,6 +66,9 @@ import com.app.dreamiaselite.ui.screen.screens.theme.ThemeAppearanceScreen
 import com.app.dreamiaselite.ui.screen.screens.settings.SettingsScreen
 import com.app.dreamiaselite.ui.screen.screens.help.HelpFeedbackScreen
 import com.app.dreamiaselite.ui.screen.screens.about.AboutPrivacyScreen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.compose.runtime.produceState
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,6 +121,7 @@ fun DreamIasApp() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val appContext = LocalContext.current.applicationContext
+    var showLogoutDialog by remember { mutableStateOf(false) }
     val authViewModel: AuthViewModel = viewModel(
         factory = viewModelFactory {
             initializer { AuthViewModel(appContext as android.app.Application) }
@@ -123,73 +132,108 @@ fun DreamIasApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    if (!authState.isAuthenticated) {
-        AuthScreen(
-            state = authState,
-            onLogin = { email, password -> authViewModel.login(email, password) },
-            onRegister = { email, username, targetYear, password ->
-                authViewModel.register(email, username, targetYear, password)
-            },
-            onClearError = { authViewModel.clearError() }
-        )
-    } else {
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                DreamDrawer(
-                    currentRoute = currentRoute,
-                    userName = authState.currentUserName,
-                    userEmail = authState.currentUserEmail,
-                    onItemClick = { route ->
-                        scope.launch { drawerState.close() }
+    when {
+        authState.isLoading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        !authState.isAuthenticated -> {
+            AuthScreen(
+                state = authState,
+                onLogin = { email, password -> authViewModel.login(email, password) },
+                onRegister = { email, username, targetYear, password ->
+                    authViewModel.register(email, username, targetYear, password)
+                },
+                onClearError = { authViewModel.clearError() }
+            )
+        }
+        else -> {
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    DreamDrawer(
+                        currentRoute = currentRoute,
+                        userName = authState.currentUserName,
+                        userEmail = authState.currentUserEmail,
+                        avatarUrl = authState.avatarUrl,
+                        onItemClick = { route ->
+                            scope.launch { drawerState.close() }
 
-                        when {
-                            route == "logout" -> {
-                                authViewModel.logout()
-                                navController.navigate(BottomNavItem.Home.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        inclusive = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = false
+                            when {
+                                route == "logout" -> {
+                                    showLogoutDialog = true
                                 }
-                            }
-                            route != null && route != currentRoute -> {
-                                navController.navigate(route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                route != null && route != currentRoute -> {
+                                    navController.navigate(route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
                             }
                         }
-                    }
-                )
-            }
-        ) {
-            Scaffold(
-                topBar = {
-                    DreamTopBar(
-                        currentRoute = currentRoute,
-                        onMenuClick = { scope.launch { drawerState.open() } }
                     )
-                },
-                bottomBar = {
-                    DreamBottomBar(navController)
                 }
-            ) { padding ->
-                DreamNavHost(
-                    navController = navController,
-                    modifier = Modifier.padding(padding),
-                    authState = authState,
-                    onUpdateProfile = { name, targetYear, avatarUri ->
-                        authViewModel.updateProfile(name, targetYear, avatarUri)
+            ) {
+                Scaffold(
+                    topBar = {
+                        DreamTopBar(
+                            currentRoute = currentRoute,
+                            onMenuClick = { scope.launch { drawerState.open() } }
+                        )
                     },
-                    onClearProfileMessage = { authViewModel.clearProfileMessage() }
-                )
+                    bottomBar = {
+                        DreamBottomBar(navController)
+                    }
+                ) { padding ->
+                    DreamNavHost(
+                        navController = navController,
+                        modifier = Modifier.padding(padding),
+                        authState = authState,
+                        onUpdateProfile = { name, targetYear, avatarUri ->
+                            authViewModel.updateProfile(name, targetYear, avatarUri)
+                        },
+                        onClearProfileMessage = { authViewModel.clearProfileMessage() }
+                    )
+                }
             }
         }
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Log out?") },
+            text = { Text("Are you sure you want to log out?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        authViewModel.logout()
+                        navController.navigate(BottomNavItem.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    }
+                ) { Text("Confirm") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -237,6 +281,7 @@ fun DreamDrawer(
     currentRoute: String?,
     userName: String?,
     userEmail: String?,
+    avatarUrl: String?,
     onItemClick: (String?) -> Unit
 ) {
 
@@ -270,7 +315,7 @@ fun DreamDrawer(
         drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
         modifier = Modifier.fillMaxWidth(0.7f)
     ) {
-        DrawerHeader(userName = userName, userEmail = userEmail)
+        DrawerHeader(userName = userName, userEmail = userEmail, avatarUrl = avatarUrl)
 
         DrawerSection("Account", accountItems, currentRoute, onItemClick)
         DrawerSection("Study Tools", studyToolsItems, currentRoute, onItemClick)
@@ -313,9 +358,10 @@ fun DrawerSection(
 }
 
 @Composable
-fun DrawerHeader(userName: String?, userEmail: String?) {
+fun DrawerHeader(userName: String?, userEmail: String?, avatarUrl: String?) {
     val displayName = userName?.ifBlank { null } ?: "Dream IAS Elite"
     val displayEmail = userEmail?.ifBlank { null } ?: "UPSC CSE • Free plan"
+    val avatarBitmap by rememberBitmapFromUri(avatarUrl?.let { Uri.parse(it) })
 
     Surface(
         tonalElevation = 2.dp,
@@ -336,14 +382,25 @@ fun DrawerHeader(userName: String?, userEmail: String?) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("DE", color = Color.White, fontWeight = FontWeight.Bold)
+            if (avatarBitmap != null) {
+                Image(
+                    bitmap = avatarBitmap!!,
+                    contentDescription = "Profile photo",
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("DE", color = Color.White, fontWeight = FontWeight.Bold)
+                }
             }
 
             Spacer(Modifier.width(12.dp))
@@ -381,6 +438,34 @@ fun DrawerItemRow(item: DrawerItem, isSelected: Boolean, onItemClick: (String?) 
             selectedTextColor = MaterialTheme.colorScheme.primary
         )
     )
+}
+
+@Composable
+private fun rememberBitmapFromUri(uri: Uri?): State<ImageBitmap?> {
+    val context = LocalContext.current
+    return produceState<ImageBitmap?>(initialValue = null, key1 = uri) {
+        if (uri == null) {
+            value = null
+            return@produceState
+        }
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                when (uri.scheme) {
+                    "content" -> {
+                        context.contentResolver.openInputStream(uri)?.use { stream ->
+                            BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                        }
+                    }
+                    "file" -> {
+                        java.io.File(uri.path.orEmpty()).takeIf { it.exists() }?.inputStream()?.use { stream ->
+                            BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                        }
+                    }
+                    else -> null
+                }
+            }.getOrNull()
+        }
+    }
 }
 
 // ----------------- Bottom Bar -----------------
@@ -483,7 +568,11 @@ fun DreamNavHost(
 
         composable("theme_appearance") { ThemeAppearanceScreen() }
         composable("settings") { SettingsScreen() }
-        composable("help_feedback") { HelpFeedbackScreen() }
+        composable("help_feedback") {
+            HelpFeedbackScreen(
+                currentUserEmail = authState.currentUserEmail
+            )
+        }
         composable("about_privacy") { AboutPrivacyScreen() }
         composable("study_planner") { StudyPlannerScreen() }
         composable("test_books/{subject}") { entry ->

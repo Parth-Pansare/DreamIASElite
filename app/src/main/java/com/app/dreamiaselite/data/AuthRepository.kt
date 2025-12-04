@@ -72,6 +72,10 @@ class AuthRepository(
         userDao.getUserByEmail(email)
     }
 
+    suspend fun getStoredAvatar(email: String): String? = withContext(Dispatchers.IO) {
+        prefs.getAvatarUrl(email)
+    }
+
     suspend fun updateProfile(
         email: String,
         username: String,
@@ -80,9 +84,14 @@ class AuthRepository(
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val existing = userDao.getUserByEmail(email)
-                ?: return@withContext Result.failure(IllegalStateException("No account found"))
+            if (existing == null) {
+                // Persist avatar in prefs so UI can still show it; ask user to re-login for DB sync.
+                prefs.setAvatarUrl(email, avatarUri?.toString())
+                return@withContext Result.failure(IllegalStateException("No account found. Please sign in again."))
+            }
 
             userDao.updateProfile(email = email, username = username, targetYear = targetYear, avatarUrl = avatarUri?.toString())
+            prefs.setAvatarUrl(email, avatarUri?.toString())
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

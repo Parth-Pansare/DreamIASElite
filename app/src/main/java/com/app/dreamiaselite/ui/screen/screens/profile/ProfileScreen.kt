@@ -136,7 +136,8 @@ fun ProfileScreen(
             croppedImageUri = croppedImageUri,
             onConfirm = { uri ->
                 selectedPhotoUriString = uri?.toString()
-                onUpdateProfile(displayName, target, uri)
+                val targetForSave = targetYear?.toString() ?: ""
+                onUpdateProfile(displayName, targetForSave, uri)
                 showConfirmDialog = false
             },
             onDismiss = { showConfirmDialog = false }
@@ -487,8 +488,18 @@ private fun rememberBitmapFromUri(uri: Uri?): androidx.compose.runtime.State<Ima
         }
         value = withContext(Dispatchers.IO) {
             runCatching {
-                context.contentResolver.openInputStream(uri)?.use { stream ->
-                    BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                when (uri.scheme) {
+                    "content" -> {
+                        context.contentResolver.openInputStream(uri)?.use { stream ->
+                            BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                        }
+                    }
+                    "file" -> {
+                        java.io.File(uri.path.orEmpty()).takeIf { it.exists() }?.inputStream()?.use { stream ->
+                            BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                        }
+                    }
+                    else -> null
                 }
             }.getOrNull()
         }

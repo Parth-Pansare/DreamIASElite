@@ -8,15 +8,19 @@ import androidx.lifecycle.viewModelScope
 import com.app.dreamiaselite.data.AuthPreferences
 import com.app.dreamiaselite.data.AuthRepository
 import com.app.dreamiaselite.data.local.AppDatabase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 data class AuthUiState(
     val isAuthenticated: Boolean = false,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val currentUserEmail: String? = null,
     val currentUserName: String? = null,
@@ -30,11 +34,12 @@ data class AuthUiState(
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val authPrefs = AuthPreferences(application)
     private val repository by lazy {
         val db = AppDatabase.getInstance(application)
         AuthRepository(
             userDao = db.userDao(),
-            prefs = AuthPreferences(application)
+            prefs = authPrefs
         )
     }
 
@@ -45,20 +50,41 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.currentUserEmail.collectLatest { email ->
                 val user = email?.let { repository.getUserByEmail(it) }
-                _uiState.update {
-                    it.copy(
-                        isAuthenticated = !email.isNullOrEmpty(),
-                        currentUserEmail = email,
-                        currentUserName = user?.username,
-                        targetYear = user?.targetYear,
-                        createdAt = user?.createdAt,
-                        avatarUrl = user?.avatarUrl,
-                        isLoading = false,
-                        errorMessage = null,
-                        isProfileSaving = false,
-                        profileMessage = null,
-                        profileMessageIsError = false
-                    )
+                val prefAvatar = email?.let { repository.getStoredAvatar(it) }
+                if (email != null && user == null) {
+                    // Session refers to a user that no longer exists in DB; reset session but keep avatar for display.
+                    authPrefs.clearCurrentUser()
+                    _uiState.update {
+                        it.copy(
+                            isAuthenticated = false,
+                            currentUserEmail = null,
+                            currentUserName = null,
+                            targetYear = null,
+                            createdAt = null,
+                            avatarUrl = prefAvatar,
+                            isLoading = false,
+                            errorMessage = "Session expired, please sign in again",
+                            isProfileSaving = false,
+                            profileMessage = null,
+                            profileMessageIsError = false
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isAuthenticated = !email.isNullOrEmpty(),
+                            currentUserEmail = email,
+                            currentUserName = user?.username,
+                            targetYear = user?.targetYear,
+                            createdAt = user?.createdAt,
+                            avatarUrl = user?.avatarUrl ?: prefAvatar,
+                            isLoading = false,
+                            errorMessage = null,
+                            isProfileSaving = false,
+                            profileMessage = null,
+                            profileMessageIsError = false
+                        )
+                    }
                 }
             }
         }
@@ -173,7 +199,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        val targetYear = targetYearInput.toIntOrNull()
+        val fallbackYear = if (avatarUri != null) 2024 else null
+        val targetYear = targetYearInput.toIntOrNull() ?: _uiState.value.targetYear ?: fallbackYear
         if (targetYear == null || targetYear !in 2024..2100) {
             _uiState.update { it.copy(profileMessage = "Enter a valid target year (2024-2100)", profileMessageIsError = true) }
             return
@@ -187,22 +214,29 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             _uiState.update { it.copy(isProfileSaving = true, profileMessage = null, profileMessageIsError = false) }
-            val result = repository.updateProfile(email, trimmedName, targetYear, avatarUri)
+            val avatarUriToPersist = withContext(Dispatchers.IO) {
+                avatarUri?.let { saveAvatarToInternalStorage(email, it) } ?: _uiState.value.avatarUrl?.let { Uri.parse(it) }
+            }
+
+            val result = repository.updateProfile(email, trimmedName, targetYear, avatarUriToPersist)
             _uiState.update { state ->
                 result.fold(
                     onSuccess = {
+                        val refreshedUser = runCatching { repository.getUserByEmail(email) }.getOrNull()
                         state.copy(
-                            currentUserName = trimmedName,
-                            targetYear = targetYear,
-                            avatarUrl = avatarUri?.toString() ?: state.avatarUrl,
+                            currentUserName = refreshedUser?.username ?: trimmedName,
+                            targetYear = refreshedUser?.targetYear ?: targetYear,
+                            avatarUrl = refreshedUser?.avatarUrl ?: avatarUriToPersist?.toString() ?: state.avatarUrl,
                             isProfileSaving = false,
                             profileMessage = "Profile updated",
                             profileMessageIsError = false
                         )
                     },
                     onFailure = {
+                        // Even if DB missing, prefer keeping the avatar from prefs and show message.
                         state.copy(
                             isProfileSaving = false,
+                            avatarUrl = avatarUriToPersist?.toString() ?: state.avatarUrl,
                             profileMessage = it.message ?: "Unable to update profile",
                             profileMessageIsError = true
                         )
@@ -214,5 +248,22 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun setError(message: String) {
         _uiState.update { it.copy(errorMessage = message, isLoading = false) }
+    }
+
+    private fun saveAvatarToInternalStorage(email: String, sourceUri: Uri): Uri? {
+        return runCatching {
+            val app = getApplication<Application>()
+            val avatarsDir = File(app.filesDir, "avatars").apply { mkdirs() }
+            val safeName = email.replace(Regex("[^A-Za-z0-9._-]"), "_")
+            val file = File(avatarsDir, "avatar_${safeName}.jpg")
+
+            app.contentResolver.openInputStream(sourceUri)?.use { input ->
+                FileOutputStream(file, false).use { output ->
+                    input.copyTo(output)
+                }
+            } ?: return null
+
+            Uri.fromFile(file)
+        }.getOrNull()
     }
 }
