@@ -36,10 +36,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.app.dreamiaselite.ui.screen.screens.auth.AuthScreen
 import com.app.dreamiaselite.ui.screen.screens.auth.AuthViewModel
+import com.app.dreamiaselite.ui.screen.screens.auth.AuthUiState
 import com.app.dreamiaselite.ui.screens.currentaffairs.CurrentAffairsScreen
 import com.app.dreamiaselite.ui.screens.dashboard.DashboardScreen
 import com.app.dreamiaselite.ui.screens.dashboard.SubjectDashboardScreen
 import com.app.dreamiaselite.ui.screen.screens.notes.NotesScreen
+import com.app.dreamiaselite.ui.screen.screens.notes.NotesReferenceBooksScreen
+import com.app.dreamiaselite.ui.screen.screens.notes.NotesReferenceUnitsScreen
+import com.app.dreamiaselite.ui.screen.screens.profile.ProfileScreen
 import com.app.dreamiaselite.ui.screen.screens.pyq.PyqScreen
 import com.app.dreamiaselite.ui.screen.screens.pyq.PyqPaperDetailScreen
 import com.app.dreamiaselite.ui.screen.screens.tests.TestsScreen
@@ -178,7 +182,11 @@ fun DreamIasApp() {
                 DreamNavHost(
                     navController = navController,
                     modifier = Modifier.padding(padding),
-                    userName = authState.currentUserName
+                    authState = authState,
+                    onUpdateProfile = { name, targetYear, avatarUri ->
+                        authViewModel.updateProfile(name, targetYear, avatarUri)
+                    },
+                    onClearProfileMessage = { authViewModel.clearProfileMessage() }
                 )
             }
         }
@@ -198,7 +206,7 @@ fun DreamTopBar(
         BottomNavItem.CurrentAffairs.route -> "Current Affairs"
         BottomNavItem.Tests.route -> "Test Series"
         BottomNavItem.Pyq.route -> "Previous Year Questions"
-        BottomNavItem.Notes.route -> "My Notes"
+        BottomNavItem.Notes.route -> "Notes"
         "theme_appearance" -> "Theme & Appearance"
         "settings" -> "Settings"
         "help_feedback" -> "Help & Feedback"
@@ -235,7 +243,7 @@ fun DreamDrawer(
     // Remember drawer items to prevent recreation on each recomposition
     val accountItems = remember {
         listOf(
-            DrawerItem("My Profile", icon = Icons.Outlined.AccountCircle, subtitle = "Target year, name", badge = "Soon"),
+            DrawerItem("My Profile", route = "profile", icon = Icons.Outlined.AccountCircle, subtitle = "View your details"),
             DrawerItem("Progress & Analytics", icon = Icons.Outlined.BarChart, subtitle = "Accuracy, time spent, trends", badge = "Soon")
         )
     }
@@ -437,7 +445,9 @@ fun DreamBottomBar(navController: NavHostController) {
 fun DreamNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    userName: String?
+    authState: AuthUiState,
+    onUpdateProfile: (String, String, Uri?) -> Unit,
+    onClearProfileMessage: () -> Unit
 ) {
 
     NavHost(
@@ -446,11 +456,26 @@ fun DreamNavHost(
         modifier = modifier
     ) {
 
-        composable(BottomNavItem.Home.route) { DashboardScreen(navController, userName) }
+        composable(BottomNavItem.Home.route) { DashboardScreen(navController, authState.currentUserName) }
         composable(BottomNavItem.CurrentAffairs.route) { CurrentAffairsScreen() }
         composable(BottomNavItem.Tests.route) { TestsScreen(navController) }
         composable(BottomNavItem.Pyq.route) { PyqScreen(navController) }
-        composable(BottomNavItem.Notes.route) { NotesScreen() }
+        composable(BottomNavItem.Notes.route) { NotesScreen(navController) }
+        composable("profile") {
+            ProfileScreen(
+                navController = navController,
+                userName = authState.currentUserName,
+                userEmail = authState.currentUserEmail,
+                targetYear = authState.targetYear,
+                createdAt = authState.createdAt,
+                avatarUrl = authState.avatarUrl,
+                isSaving = authState.isProfileSaving,
+                profileMessage = authState.profileMessage,
+                profileMessageIsError = authState.profileMessageIsError,
+                onUpdateProfile = onUpdateProfile,
+                onClearMessage = onClearProfileMessage
+            )
+        }
         composable("subject_dashboard/{subject}") { entry ->
             val subject = entry.arguments?.getString("subject") ?: "Subject"
             SubjectDashboardScreen(Uri.decode(subject), navController)
@@ -488,6 +513,15 @@ fun DreamNavHost(
         composable("pyq_paper/{paperId}") { entry ->
             val paperId = entry.arguments?.getString("paperId") ?: return@composable
             PyqPaperDetailScreen(navController, paperId)
+        }
+        composable("notes_reference/{subject}") { entry ->
+            val subject = entry.arguments?.getString("subject") ?: return@composable
+            NotesReferenceBooksScreen(Uri.decode(subject), navController)
+        }
+        composable("notes_reference_units/{subject}/{book}") { entry ->
+            val subject = entry.arguments?.getString("subject") ?: return@composable
+            val book = entry.arguments?.getString("book") ?: return@composable
+            NotesReferenceUnitsScreen(Uri.decode(subject), Uri.decode(book), navController)
         }
     }
 }

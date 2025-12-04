@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -85,6 +86,11 @@ fun TestSessionScreen(subjectName: String, navController: NavController) {
     val context = LocalContext.current
     val displayTitle = subjectName.substringAfterLast(" - ", subjectName)
     val isBookmarked = bookmarks.getOrElse(currentIndex) { false }
+    val questionScroll = rememberScrollState()
+
+    LaunchedEffect(currentIndex) {
+        questionScroll.scrollTo(0)
+    }
 
     LaunchedEffect(completed) {
         while (!completed && timeLeft > 0) {
@@ -150,15 +156,29 @@ fun TestSessionScreen(subjectName: String, navController: NavController) {
             }
         }
 
-        QuestionCard(
-            question = questions[currentIndex],
-            selectedIndex = selected[currentIndex],
-            onSelect = { chosen ->
-                selected = selected.toMutableList().also { it[currentIndex] = chosen }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(questionScroll),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                QuestionCard(
+                    question = questions[currentIndex],
+                    selectedIndex = selected[currentIndex],
+                    onSelect = { chosen ->
+                        selected = selected.toMutableList().also { it[currentIndex] = chosen }
+                    }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
-        )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Divider()
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -313,7 +333,18 @@ private fun generateQuestionsFor(subject: String): List<TestQuestion> {
         subject.contains("Science", ignoreCase = true) -> scienceQuestions()
         else -> generalQuestions()
     }
-    return pool.take(10)
+    val bigQuestion = TestQuestion(
+        question = "You are drafting a policy brief on climate-resilient agriculture for a parliamentary standing committee. The committee wants an integrated package that improves soil health, water use efficiency, market access, and early warning systems without undermining smallholder livelihoods. Which approach best fits that requirement?",
+        options = listOf(
+            "Scale up high-input cash crops with export-linked contracts, replace MSP with direct cash transfers, and rely mainly on post-disaster relief to support farmers.",
+            "Promote diversified cropping with millets and pulses, invest in micro-irrigation and watershed restoration, expand MSP/storage for climate-resilient crops, and integrate IMD/ISRO early warning advisories with local extension services.",
+            "Ban groundwater extraction nationwide, shift entirely to organic farming within five years, and mandate crop insurance only for rainfed districts to reduce fiscal burden.",
+            "Provide uniform fertilizer subsidies, encourage large estates to lease smallholder land for mechanized cultivation, and defer all climate adaptation spending until after FY2030."
+        ),
+        correctIndex = 1,
+        explanation = "A climate-resilient pathway combines diversified crops, water efficiency, storage/market assurance for resilient staples, and timely advisories—protecting smallholders while improving adaptive capacity."
+    )
+    return listOf(bigQuestion) + pool.take(9)
 }
 
 private fun historyQuestions() = listOf(

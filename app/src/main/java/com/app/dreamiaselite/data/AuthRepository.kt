@@ -1,5 +1,6 @@
 package com.app.dreamiaselite.data
 
+import android.net.Uri
 import android.util.Base64
 import com.app.dreamiaselite.data.local.UserDao
 import com.app.dreamiaselite.data.local.UserEntity
@@ -69,6 +70,23 @@ class AuthRepository(
 
     suspend fun getUserByEmail(email: String): UserEntity? = withContext(Dispatchers.IO) {
         userDao.getUserByEmail(email)
+    }
+
+    suspend fun updateProfile(
+        email: String,
+        username: String,
+        targetYear: Int,
+        avatarUri: Uri?
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val existing = userDao.getUserByEmail(email)
+                ?: return@withContext Result.failure(IllegalStateException("No account found"))
+
+            userDao.updateProfile(email = email, username = username, targetYear = targetYear, avatarUrl = avatarUri?.toString())
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     private fun hashPassword(password: String, salt: String): String {

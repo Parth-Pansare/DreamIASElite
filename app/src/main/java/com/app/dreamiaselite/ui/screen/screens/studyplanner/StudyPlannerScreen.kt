@@ -22,10 +22,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,37 +55,20 @@ data class PlannerTask(
 fun StudyPlannerScreen() {
     val scrollState = rememberScrollState()
 
-    var tasks by remember {
-        mutableStateOf(
-            listOf(
-                PlannerTask(
-                    title = "Laxmikanth – Fundamental Rights",
-                    subtitle = "Polity • 1 hr"
-                ),
-                PlannerTask(
-                    title = "Spectrum – Revolt of 1857",
-                    subtitle = "History • 45 min",
-                    isDone = true
-                ),
-                PlannerTask(
-                    title = "50 MCQs – Polity",
-                    subtitle = "Prelims • 50 questions"
-                ),
-                PlannerTask(
-                    title = "Revise CA – 18 Nov",
-                    subtitle = "Current Affairs • 30 min"
-                )
-            )
-        )
-    }
+    var tasks by remember { mutableStateOf(listOf<PlannerTask>()) }
 
     val completedCount = tasks.count { it.isDone }
     val totalCount = tasks.size
 
-    // state for Quick Add dialog
+    // dialogs and inline form state
     var showAddDialog by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
     var newSubtitle by remember { mutableStateOf("") }
+    var showEditPicker by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editTitle by remember { mutableStateOf("") }
+    var editSubtitle by remember { mutableStateOf("") }
+    var editingIndex by remember { mutableStateOf<Int?>(null) }
 
     Column(
         modifier = Modifier
@@ -119,6 +104,12 @@ fun StudyPlannerScreen() {
                     val old = list[index]
                     list[index] = old.copy(isDone = !old.isDone)
                 }
+            },
+            onAddTask = { showAddDialog = true },
+            onEditTask = {
+                if (tasks.isNotEmpty()) {
+                    showEditPicker = true
+                }
             }
         )
 
@@ -126,22 +117,6 @@ fun StudyPlannerScreen() {
 
         Spacer(Modifier.height(4.dp))
 
-        // QUICK ADD BUTTON
-        Button(
-            onClick = { showAddDialog = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(50),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text(text = "+ Add Task")
-        }
-
-        Spacer(Modifier.height(12.dp))
     }
 
     // ---------- Quick Add Dialog ----------
@@ -200,6 +175,104 @@ fun StudyPlannerScreen() {
                 ) {
                     Text("Cancel")
                 }
+            }
+        )
+    }
+
+    // ---------- Edit Task Picker ----------
+    if (showEditPicker) {
+        AlertDialog(
+            onDismissRequest = { showEditPicker = false },
+            title = { Text("Edit today’s task") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (tasks.isEmpty()) {
+                        Text("No tasks to edit yet.")
+                    } else {
+                        tasks.forEachIndexed { index, task ->
+                            OutlinedButton(
+                                onClick = {
+                                    editingIndex = index
+                                    editTitle = task.title
+                                    editSubtitle = task.subtitle
+                                    showEditPicker = false
+                                    showEditDialog = true
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(task.title, fontWeight = FontWeight.SemiBold)
+                                    Text(
+                                        task.subtitle,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showEditPicker = false }
+                ) { Text("Close") }
+            }
+        )
+    }
+
+
+    // ---------- Edit Task Dialog ----------
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showEditDialog = false
+                editingIndex = null
+            },
+            title = { Text("Edit today’s task") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = editTitle,
+                        onValueChange = { editTitle = it },
+                        label = { Text("Task title") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = editSubtitle,
+                        onValueChange = { editSubtitle = it },
+                        label = { Text("Details") },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val index = editingIndex
+                        if (index != null && editTitle.isNotBlank()) {
+                            tasks = tasks.toMutableList().also { list ->
+                                val old = list[index]
+                                list[index] = old.copy(
+                                    title = editTitle.trim(),
+                                    subtitle = editSubtitle.ifBlank { "Custom task" }.trim()
+                                )
+                            }
+                        }
+                        showEditDialog = false
+                        editingIndex = null
+                    }
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        showEditDialog = false
+                        editingIndex = null
+                    }
+                ) { Text("Cancel") }
             }
         )
     }
@@ -303,7 +376,9 @@ private fun SummaryStat(
 @Composable
 private fun TodayPlanCard(
     tasks: List<PlannerTask>,
-    onToggleTask: (Int) -> Unit
+    onToggleTask: (Int) -> Unit,
+    onAddTask: () -> Unit,
+    onEditTask: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -315,18 +390,43 @@ private fun TodayPlanCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Today’s plan",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                )
-            )
-            Text(
-                text = "Mark tasks as done as you progress.",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Today’s plan",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Text(
+                        text = "Mark tasks as done as you progress.",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    )
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilledTonalButton(
+                        onClick = onAddTask,
+                        contentPadding = ButtonDefaults.ContentPadding
+                    ) { Text("+ New") }
+                    OutlinedButton(
+                        onClick = onEditTask,
+                        enabled = tasks.isNotEmpty(),
+                        contentPadding = ButtonDefaults.ContentPadding
+                    ) { Text("Edit") }
+                }
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -334,6 +434,14 @@ private fun TodayPlanCard(
                 PlannerTaskRow(
                     task = task,
                     onToggle = { onToggleTask(index) }
+                )
+            }
+            if (tasks.isEmpty()) {
+                Text(
+                    text = "No tasks added yet. Tap “+ New” to plan your day.",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+                    )
                 )
             }
         }

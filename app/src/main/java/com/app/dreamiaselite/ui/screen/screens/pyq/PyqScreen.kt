@@ -7,8 +7,10 @@ import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -50,6 +52,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -62,9 +65,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 
 private data class PyqPaper(
     val id: String,
@@ -634,25 +640,68 @@ private fun StatsCard(
 @Composable
 private fun StudyTipCard() {
 
+    val tips = listOf(
+        "Analyze the pattern of questions asked in previous years. Focus on frequently asked topics and practice at least 2–3 papers from each subject.",
+        "Simulate exam conditions: 2-hour timer, OMR-style marking, and post-test error log to spot recurring mistakes.",
+        "Group PYQs by themes (polity, geography, environment) and revise with concise notes before attempting fresh mocks."
+    )
+    val tipColors = listOf(
+        Color(0xFFFF6F1E),
+        Color(0xFF2E6BFF),
+        Color(0xFF15803D)
+    )
+    var tipIndex by remember { mutableStateOf(0) }
+    var dragDistance by remember { mutableStateOf(0f) }
+    val cardColor by animateColorAsState(
+        targetValue = tipColors[tipIndex % tipColors.size],
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 650),
+        label = "tip_card_color"
+    )
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(20_000)
+            tipIndex = (tipIndex + 1) % tips.size
+        }
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFF6F1E)),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-
             Icon(
                 imageVector = Icons.Outlined.Info,
-                contentDescription = "Study Tip",
-                tint = Color.White
+                contentDescription = "Tip info",
+                tint = Color.White,
+                modifier = Modifier.align(Alignment.TopEnd)
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(tips.size, tipIndex) {
+                        detectHorizontalDragGestures(
+                            onDragEnd = {
+                                when {
+                                    dragDistance > 60 -> tipIndex = (tipIndex - 1 + tips.size) % tips.size
+                                    dragDistance < -60 -> tipIndex = (tipIndex + 1) % tips.size
+                                }
+                                dragDistance = 0f
+                            }
+                        ) { change, dragAmount ->
+                            dragDistance += dragAmount
+                            change.consume()
+                        }
+                    }
+            ) {
 
                 Text(
                     text = "Study Tip",
@@ -663,8 +712,9 @@ private fun StudyTipCard() {
                 )
 
                 Text(
-                    text = "Analyze the pattern of questions asked in previous years. Focus on frequently asked topics and practice at least 2–3 papers from each subject.",
-                    color = Color.White
+                    text = tips[tipIndex],
+                    color = Color.White,
+                    textAlign = TextAlign.Start
                 )
             }
         }

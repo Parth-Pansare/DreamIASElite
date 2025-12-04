@@ -1,6 +1,7 @@
 package com.app.dreamiaselite.ui.screen.screens.auth
 
 import android.app.Application
+import android.net.Uri
 import android.util.Patterns
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +19,13 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val currentUserEmail: String? = null,
-    val currentUserName: String? = null
+    val currentUserName: String? = null,
+    val targetYear: Int? = null,
+    val createdAt: Long? = null,
+    val avatarUrl: String? = null,
+    val isProfileSaving: Boolean = false,
+    val profileMessage: String? = null,
+    val profileMessageIsError: Boolean = false
 )
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -43,8 +50,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                         isAuthenticated = !email.isNullOrEmpty(),
                         currentUserEmail = email,
                         currentUserName = user?.username,
+                        targetYear = user?.targetYear,
+                        createdAt = user?.createdAt,
+                        avatarUrl = user?.avatarUrl,
                         isLoading = false,
-                        errorMessage = null
+                        errorMessage = null,
+                        isProfileSaving = false,
+                        profileMessage = null,
+                        profileMessageIsError = false
                     )
                 }
             }
@@ -66,7 +79,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             val result = repository.login(email.trim(), password)
             _uiState.update { state ->
                 result.fold(
-                    onSuccess = { state.copy(isAuthenticated = true, isLoading = false, errorMessage = null) },
+                    onSuccess = {
+                        state.copy(
+                            isAuthenticated = true,
+                            isLoading = false,
+                            errorMessage = null,
+                            isProfileSaving = false,
+                            profileMessage = null,
+                            profileMessageIsError = false
+                        )
+                    },
                     onFailure = { state.copy(isLoading = false, errorMessage = it.message ?: "Login failed") }
                 )
             }
@@ -102,7 +124,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             )
             _uiState.update { state ->
                 result.fold(
-                    onSuccess = { state.copy(isAuthenticated = true, isLoading = false, errorMessage = null) },
+                    onSuccess = {
+                        state.copy(
+                            isAuthenticated = true,
+                            isLoading = false,
+                            errorMessage = null,
+                            isProfileSaving = false,
+                            profileMessage = null,
+                            profileMessageIsError = false
+                        )
+                    },
                     onFailure = { state.copy(isLoading = false, errorMessage = it.message ?: "Registration failed") }
                 )
             }
@@ -112,12 +143,73 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun logout() {
         viewModelScope.launch {
             repository.logout()
-            _uiState.update { it.copy(isAuthenticated = false, currentUserEmail = null, currentUserName = null) }
+            _uiState.update {
+                it.copy(
+                    isAuthenticated = false,
+                    currentUserEmail = null,
+                    currentUserName = null,
+                    targetYear = null,
+                    createdAt = null,
+                    isProfileSaving = false,
+                    profileMessage = null,
+                    profileMessageIsError = false
+                )
+            }
         }
     }
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun clearProfileMessage() {
+        _uiState.update { it.copy(profileMessage = null, profileMessageIsError = false) }
+    }
+
+    fun updateProfile(name: String, targetYearInput: String, avatarUri: Uri?) {
+        val trimmedName = name.trim()
+        if (trimmedName.isBlank()) {
+            _uiState.update { it.copy(profileMessage = "Please enter your name", profileMessageIsError = true) }
+            return
+        }
+
+        val targetYear = targetYearInput.toIntOrNull()
+        if (targetYear == null || targetYear !in 2024..2100) {
+            _uiState.update { it.copy(profileMessage = "Enter a valid target year (2024-2100)", profileMessageIsError = true) }
+            return
+        }
+
+        val email = _uiState.value.currentUserEmail
+        if (email.isNullOrBlank()) {
+            _uiState.update { it.copy(profileMessage = "You need to be signed in to edit the profile", profileMessageIsError = true) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProfileSaving = true, profileMessage = null, profileMessageIsError = false) }
+            val result = repository.updateProfile(email, trimmedName, targetYear, avatarUri)
+            _uiState.update { state ->
+                result.fold(
+                    onSuccess = {
+                        state.copy(
+                            currentUserName = trimmedName,
+                            targetYear = targetYear,
+                            avatarUrl = avatarUri?.toString() ?: state.avatarUrl,
+                            isProfileSaving = false,
+                            profileMessage = "Profile updated",
+                            profileMessageIsError = false
+                        )
+                    },
+                    onFailure = {
+                        state.copy(
+                            isProfileSaving = false,
+                            profileMessage = it.message ?: "Unable to update profile",
+                            profileMessageIsError = true
+                        )
+                    }
+                )
+            }
+        }
     }
 
     private fun setError(message: String) {

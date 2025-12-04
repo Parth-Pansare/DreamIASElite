@@ -10,5 +10,6 @@ data class UserEntity(
     val targetYear: Int,
     val passwordHash: String,
     val salt: String,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val avatarUrl: String? = null
 )
